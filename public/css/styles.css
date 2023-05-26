@@ -1,0 +1,72 @@
+:root {
+    --bg-0: #020617;
+    --bg-1: #334155;
+    --font-0: #f8fafc;
+}
+
+body {
+    margin: 0 !important;
+    background-color: var(--bg-0);
+    color: var(--font-0);
+    font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+main {
+    max-width: 1024px;
+    height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem;
+}
+
+.top {
+    display: flex;
+    width: 100%;
+    background-color: black;
+}
+
+.top>*+* {
+    margin-left: 1rem;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    grid-gap: 10px;
+    width: 100%;
+    max-width: 640px;
+}
+
+.field {
+    background-color: var(--bg-1);
+    width: 100%;
+    aspect-ratio: 1/1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    user-select: none;
+}
+
+.logs {
+    width: auto;
+    height: 100%;
+    background-color: var(--bg-1);
+    overflow-y: scroll;
+}
+
+.cross {
+    color: red;
+}
+
+.circle {
+    color: blue;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
