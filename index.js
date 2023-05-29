@@ -21,6 +21,15 @@ app.get('/game', (req, res) => {
   res.render('game.html', { title: 'Express with EJS' });
 })
 
+app.get('/local', (req, res) => {
+  res.render('local.html', { title: 'Express with EJS' });
+})
+
+
+app.get('/ai', (req, res) => {
+  res.render('ai.html', { title: 'Express with EJS' });
+})
+
 const games = {}
 const winningPositions = [
   (0, 1, 2),
