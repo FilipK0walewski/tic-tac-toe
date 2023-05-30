@@ -96,6 +96,7 @@ const aiMove = () => {
                 bestScore = score
                 bestMove = i
             }
+            if (score === 1) break
         }
     }
 

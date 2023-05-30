@@ -1,21 +1,16 @@
 const urlParams = new URLSearchParams(window.location.search);
-
-const board = document.getElementById('board')
 const fields = Array.from(document.getElementsByClassName('field'))
 
 const info = document.getElementById('info')
 const infoForm = document.getElementById('info-form')
+const player0 = document.getElementById('player-0')
+const player1 = document.getElementById('player-1')
 
-const logs = document.getElementById('logs')
-
-let boardState = [null, null, null, null, null, null, null, null, null]
-
-let id = urlParams.get('id')
-const socket = io(`/?id=${id}`);
+let gameId = urlParams.get('gameId')
+const socket = io(`/?gameId=${gameId}`);
 
 socket.on("connect", () => {
   console.log('connected')
-  socket.emit
 })
 
 socket.on('disconnect', () => {
@@ -27,20 +22,25 @@ socket.on('setUserId', userId => {
 })
 
 socket.on('log', (text, type) => {
-  console.log(text, type)
-  console.log()
   logs.innerHTML += `<li>${text}</li>`
 })
 
-socket.on('gameState', data => {
-  console.log(data)
-  const userId = data.playersMap[socket.id]
-  document.getElementById('player-0').innerHTML = `${data.players[userId].username}: ${data.players[userId].score}`
+socket.on('gameEnd', () => {
+  logs.innerHTML += `<li><button id="play-again">play again</button></li>`
+  document.getElementById('play-again').addEventListener('click', () => {
+    socket.emit('playAgain', gameId)
+    logs.innerHTML = ''
+  })
+})
 
-  if (data.currentPlayer) {
+socket.on('gameState', data => {
+  const userId = data.playersMap[socket.id]
+  player0.innerHTML = `${data.players[userId].username}: ${data.players[userId].score}`
+
+  if (Object.keys(data.players).length == 2) {
     const oponentId = Object.keys(data.players).find(k => k !== userId)
-    const oponentStatus = data.players[oponentId].online === true ? 'connected' : 'disconnected'
-    document.getElementById('player-1').innerHTML = `${data.players[oponentId].username}: ${data.players[oponentId].score}(${oponentStatus})`
+    const oponentStatus = data.players[oponentId].online === true ? '' : ' - disconnected'
+    player1.innerHTML = `${data.players[oponentId].username}: ${data.players[oponentId].score}${oponentStatus}`
   }
 
   fields.forEach((field, index) => {
@@ -54,28 +54,25 @@ socket.on('gameState', data => {
 
 fields.forEach((field, index) => {
   field.addEventListener("click", () => {
-    socket.emit('gameMove', id, index)
+    socket.emit('gameMove', gameId, index)
   });
 });
 
 infoForm.addEventListener('submit', (e) => {
   e.preventDefault()
   const username = infoForm.elements.username.value
-  const sign = infoForm.elements.sign.value
   localStorage.setItem('username', username)
-  localStorage.setItem('sign', sign)
-
-  socket.emit('join', id, username, sign, null)
+  socket.emit('join', gameId, username, null)
+  info.close()
 })
 
 window.onload = () => {
   const username = localStorage.getItem('username')
-  const sign = localStorage.getItem('sign')
   const userId = localStorage.getItem('userId')
 
-  if (!username || !sign) {
+  if (!username) {
     info.showModal()
     return
   }
-  socket.emit('join', id, username, sign, userId)
+  socket.emit('join', gameId, username, userId)
 }
