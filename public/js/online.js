@@ -21,15 +21,29 @@ socket.on('setUserId', userId => {
   localStorage.setItem('userId', userId)
 })
 
-socket.on('log', (text, type) => {
+socket.on('log', (text) => {
   logs.innerHTML += `<li>${text}</li>`
 })
 
-socket.on('gameEnd', () => {
-  logs.innerHTML += `<li><button id="play-again">play again</button></li>`
-  document.getElementById('play-again').addEventListener('click', () => {
+socket.on('gameEnd', (combination) => {
+  for (let i = 0; i < fields.length; i++) {
+    if (combination.includes(i)) fields[i].classList.add('win')
+    fields[i].classList.add('disabled')
+  }
+  logs.innerHTML += `<li><button id="play-again-btn">play again</button></li>`
+  document.getElementById('play-again-btn').addEventListener('click', () => {
     socket.emit('playAgain', gameId)
     logs.innerHTML = ''
+    for (let i = 0; i < fields.length; i++) fields[i].classList.remove('win')
+  })
+})
+
+socket.on('readyRequest', () => {
+  logs.innerHTML += `<li><button id="play-again-btn">play again</button></li>`
+  document.getElementById('play-again-btn').addEventListener('click', () => {
+    socket.emit('playAgain', gameId)
+    logs.innerHTML = ''
+    for (let i = 0; i < fields.length; i++) fields[i].classList.remove('win')
   })
 })
 
@@ -41,16 +55,25 @@ socket.on('gameState', data => {
     player1.innerHTML = 'waiting for second player'
   } else if (Object.keys(data.players).length == 2) {
     const oponentId = Object.keys(data.players).find(k => k !== userId)
-    const oponentStatus = data.players[oponentId].online === true ? '' : ' - disconnected'
+
+    let oponentStatus = ''
+    if (data.players[oponentId].online === false) {
+      oponentStatus = '(disconnected)'
+    } else if (data.players[oponentId].ready === false) {
+      oponentStatus = '(not ready)'
+    }
     player1.innerHTML = `${data.players[oponentId].username}: ${data.players[oponentId].score}${oponentStatus}`
   }
 
   fields.forEach((field, index) => {
     if (data.board[index] === null) {
       field.innerHTML = "";
+      if (data.pause === false)
+        field.classList.remove('disabled')
       return
     }
-    field.innerHTML = `<span>${data.board[index]}</span>`
+    field.innerHTML = data.board[index]
+    field.classList.add('disabled')
   });
 })
 
@@ -77,4 +100,8 @@ window.onload = () => {
     return
   }
   socket.emit('join', gameId, username, userId)
+}
+
+for (let i = 0; i < fields.length; i++) {
+  fields[i].classList.add('disabled')
 }

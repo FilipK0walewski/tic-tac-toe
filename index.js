@@ -17,7 +17,10 @@ app.get('/', (req, res) => {
 })
 
 app.get('/online', (req, res) => {
-  console.log(req.query.id)
+  if (!req.query.gameId) {
+    const uuid = uuidv4();
+    res.redirect(`online?gameId=${uuid}`)
+  }
   res.render('online.html', { title: 'Express with EJS' });
 })
 
@@ -45,13 +48,14 @@ class Game {
     this.lastCurrentPlayer = null
     this.board = [null, null, null, null, null, null, null, null, null]
     this.playersMap = {}
+    this.pause = true
+    this.winningCombination = null
   }
 }
 
 io.on('connection', (socket) => {
 
   socket.on('join', (gameId, username, userId) => {
-    console.log('join', socket.id, gameId, username, userId)
 
     if (userId === null) {
       userId = uuidv4()
@@ -68,7 +72,7 @@ io.on('connection', (socket) => {
     game.playersMap[socket.id] = userId
 
     if (!Object.keys(game.players).includes(userId) && Object.keys(game.players).length == 2) {
-      socket.emit('log', 'Room full.', 'info')
+      socket.emit('log', 'Room full.')
       return
     }
 
@@ -76,19 +80,23 @@ io.on('connection', (socket) => {
     if (!Object.keys(game.players).includes(userId)) {
       const sign = Object.keys(game.players).length === 0 ? 'X' : 'O'
       game.players[userId] = { username, sign, score: 0, online: true, ready: true }
-      io.to(gameId).emit('log', `${username} joins the room.`, 'info')
+      io.to(gameId).emit('log', `${username} joins the room.`)
     } else {
       game.players[userId].online = true
-      io.to(gameId).emit('log', `${username} came back.`, 'info')
+      io.to(gameId).emit('log', `${username} came back.`)
+      if (game.players[userId].ready === false) {
+        socket.emit('readyRequest')
+      }
     }
 
     if (Object.keys(game.players).length == 2) {
       if (!game.currentPlayer) {
         const n = Math.random() < .5 ? 0 : 1
+        game.pause = false
         game.currentPlayer = Object.keys(game.players)[n]
         game.lastCurrentPlayer = game.currentPlayer
-        io.to(gameId).emit('log', `game starts`, 'info')
-        io.to(gameId).emit('log', `${game.players[game.currentPlayer].username}'s turn.`, 'info')
+        io.to(gameId).emit('log', `game starts`)
+        io.to(gameId).emit('log', `${game.players[game.currentPlayer].username}'s turn.`)
       }
     }
     io.to(gameId).emit('gameState', game)
@@ -101,10 +109,10 @@ io.on('connection', (socket) => {
     const userId = game.playersMap[socket.id]
 
     if (game.currentPlayer !== userId) {
-      io.to(gameId).emit('log', `${game.players[userId].username} is unpatient.`, 'info')
+      io.to(gameId).emit('log', `${game.players[userId].username} is unpatient.`)
       return
     } else if (game.board[fieldIndex] !== null) {
-      io.to(gameId).emit('log', `${game.players[userId].username} is unpatient.`, 'info')
+      io.to(gameId).emit('log', `${game.players[userId].username} is unpatient.`)
       return
     }
 
@@ -112,10 +120,12 @@ io.on('connection', (socket) => {
     game.board[fieldIndex] = userSign
 
     let win = false
+    let winningCombination
     for (let combination of winingCombinations) {
         const [x, y, z] = combination
         if (game.board[x] === userSign && game.board[y] === userSign && game.board[z] === userSign) {
           win = true
+          winningCombination = combination
           break
         }
     }
@@ -126,19 +136,19 @@ io.on('connection', (socket) => {
         game.players[pid].ready = false
       }
       game.players[userId].score += 1
-      io.to(gameId).emit('log', `${game.players[userId].username} wins round.`, 'info')
-      io.to(gameId).emit('gameEnd')
+      io.to(gameId).emit('log', `${game.players[userId].username} wins round.`)
+      io.to(gameId).emit('gameEnd', winningCombination)
     }
     else if (!game.board.includes(null)) {
       game.pause = true
       for (let pid in game.players) {
         game.players[pid].ready = false
       }
-      io.to(gameId).emit('log', `Draw.`, 'info')
+      io.to(gameId).emit('log', `Draw.`)
       io.to(gameId).emit('gameEnd')
     } else {
       game.currentPlayer = Object.keys(game.players).find(k => k !== userId)
-      io.to(gameId).emit('log', `${game.players[game.currentPlayer].username}'s turn.`, 'info')
+      io.to(gameId).emit('log', `${game.players[game.currentPlayer].username}'s turn.`)
     }
     io.to(gameId).emit('gameState', game)
   })
@@ -158,8 +168,8 @@ io.on('connection', (socket) => {
     game.currentPlayer = Object.keys(game.players).find(k => k !== game.lastCurrentPlayer)
     game.lastCurrentPlayer = game.currentPlayer
     game.pause = false
-    io.to(gameId).emit('log', `game starts.`, 'info')
-    io.to(gameId).emit('log', `${game.players[game.currentPlayer].username}'s turn.`, 'info')
+    io.to(gameId).emit('log', `game starts.`)
+    io.to(gameId).emit('log', `${game.players[game.currentPlayer].username}'s turn.`)
     io.to(gameId).emit('gameState', game)
   })
 
@@ -180,7 +190,7 @@ io.on('connection', (socket) => {
         delete games[room]
       }
 
-      io.to(room).emit('log', `${game.players[userId].username} chickened out.`, 'info')
+      io.to(room).emit('log', `${game.players[userId].username} chickened out.`)
       io.to(room).emit('gameState', game)
       return
     })
