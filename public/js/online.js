@@ -37,7 +37,9 @@ socket.on('gameState', data => {
   const userId = data.playersMap[socket.id]
   player0.innerHTML = `${data.players[userId].username}: ${data.players[userId].score}`
 
-  if (Object.keys(data.players).length == 2) {
+  if (Object.keys(data.players).length === 1) {
+    player1.innerHTML = 'waiting for second player'
+  } else if (Object.keys(data.players).length == 2) {
     const oponentId = Object.keys(data.players).find(k => k !== userId)
     const oponentStatus = data.players[oponentId].online === true ? '' : ' - disconnected'
     player1.innerHTML = `${data.players[oponentId].username}: ${data.players[oponentId].score}${oponentStatus}`

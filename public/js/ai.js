@@ -4,11 +4,25 @@ let board = [null, null, null, null, null, null, null, null, null]
 const ai = document.getElementById('ai')
 const player = document.getElementById('player')
 const message = document.getElementById('message')
+const messageContainer = document.getElementById('message-container')
 
 let aiScore = 0
 let playerScore = 0
 let playerStarts = Math.random() < .5 ? true : false
 let playerMove = playerStarts
+
+document.getElementById('play-again-btn').addEventListener('click', () => {
+    messageContainer.style.display = 'none'
+    board = [null, null, null, null, null, null, null, null, null]
+    playerMove = !playerStarts
+    playerStarts = playerMove
+    for (let field of fields) {
+        field.innerHTML = ''
+        field.classList.remove('disabled')
+        field.classList.remove('win')
+    }
+    if (playerMove === false) aiMove()
+})
 
 const winingCombinations = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -19,14 +33,16 @@ const winingCombinations = [
 const getGameWinner = (board) => {
     for (let combination of winingCombinations) {
         const [x, y, z] = combination
-        if (board[x] !== null && board[y] === board[x] && board[z] === board[x]) return board[x]
+        if (board[x] !== null && board[y] === board[x] && board[z] === board[x]) {
+            return [board[x], combination]
+        }
     }
-    if (board.filter(i => i === null).length === 0) return 0
-    return null
+    if (board.filter(i => i === null).length === 0) return [0, null]
+    return [null, null]
 }
 
 const minimax = (board, depth, isMaximizing) => {
-    const winner = getGameWinner(board)
+    const [winner, a] = getGameWinner(board)
     if (winner !== null) {
         return winner
     }
@@ -60,7 +76,16 @@ const updateScore = () => {
     player.innerHTML = `your score: ${playerScore}`
 }
 
-const showGameResult = (winner) => {
+const showGameResult = (winner, combination) => {
+    for (let i = 0; i < fields.length; i += 1) {
+        fields[i].classList.add('disabled')
+    }
+    if (combination !== null) {
+        for (let i of combination) {
+            fields[i].classList.add('win')
+        }
+    }
+
     msg = 'Draw!'
     if (winner === 1) {
         msg = 'AI won!'
@@ -69,18 +94,9 @@ const showGameResult = (winner) => {
         msg = 'You won!!!'
         playerScore += 1
     }
+    message.innerHTML = msg
+    messageContainer.style.display = 'flex'
     updateScore()
-    message.innerHTML = `<p>${msg}</p><button id="play-again-btn">play again</button>`
-    document.getElementById('play-again-btn').addEventListener('click', () => {
-        message.innerHTML = ''
-        board = [null, null, null, null, null, null, null, null, null]
-        playerMove = !playerStarts
-        playerStarts = playerMove
-        for (let field of fields) {
-            field.innerHTML = ''
-        }
-        if (playerMove === false) aiMove()
-    })
 }
 
 const aiMove = () => {
@@ -96,16 +112,16 @@ const aiMove = () => {
                 bestScore = score
                 bestMove = i
             }
-            if (score === 1) break
         }
     }
 
     board[bestMove] = 1
     fields[bestMove].innerHTML = 'X'
+    fields[bestMove].className += ' disabled'
 
-    const winner = getGameWinner(board)
+    const [winner, combination] = getGameWinner(board)
     if (winner !== null) {
-        showGameResult(winner)
+        showGameResult(winner, combination)
         return
     }
 
@@ -118,10 +134,11 @@ fields.forEach((field, index) => {
         if (board[index] !== null) return
         board[index] = -1
         field.innerHTML = 'O'
-        const winner = getGameWinner(board)
+        field.className += ' disabled'
+        const [winner, combination] = getGameWinner(board)
         playerMove = false
         if (winner !== null) {
-            showGameResult(winner)
+            showGameResult(winner, combination)
             return
         }
         aiMove()

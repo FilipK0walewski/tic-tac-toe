@@ -4,13 +4,17 @@
     --font-0: #f8fafc;
 }
 
+html {
+    font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+}
+
 body {
     height: 100vh;
     background-color: var(--bg-0);
     color: var(--font-0);
     margin: 0 !important;
     font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
-    font-size: 2rem;
+    font-size: .75rem;
     overflow-x: hidden;
 }
 
@@ -22,14 +26,29 @@ main {
 
 }
 
+button {
+    cursor: pointer;
+    background-color: var(--bg-0);
+    color: var(--font-0);
+    font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+    font-size: 1.25rem !important;
+    outline: none;
+    border: none;
+    text-decoration: underline;
+}
+
 .board-container {
-    max-width: 100vh;
+    max-width: 500px;
     padding: 1rem;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.nav-board {
     justify-content: center;
+    max-width: 100vh;
 }
 
 .board {
@@ -102,6 +121,7 @@ dialog::backdrop {
     overflow-y: scroll;
     padding: .5rem;
     box-sizing: border-box;
+    font-size: .75rem;
 }
 
 .disabled {
@@ -112,8 +132,21 @@ dialog::backdrop {
     background-color: var(--bg-0);
 }
 
+.win {
+    background-color: green;
+}
+
+.win:hover {
+    background-color: green !important;
+}
+
+
 @media (min-width: 640px) {
-    
+
+    body {
+        font-size: 1.05rem;
+    }
+
     .a-field {
         font-size: 1.25rem;
     }

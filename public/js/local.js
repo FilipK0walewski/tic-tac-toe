@@ -19,6 +19,7 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
     starts = turn
     for (let field of fields) {
         field.innerHTML = ''
+        field.classList.remove('disabled', 'win')
     }
     freeze = false
 })
@@ -32,7 +33,13 @@ const winingCombinations = [
 const getGameWinner = (board) => {
     for (let combination of winingCombinations) {
         const [x, y, z] = combination
-        if (board[x] !== null && board[y] === board[x] && board[z] === board[x]) return board[x]
+        if (board[x] !== null && board[y] === board[x] && board[z] === board[x]) {
+            for (let i = 0; i < fields.length; i++) {
+                if (i === x || i === y || i === z) fields[i].classList.add('win')
+                fields[i].classList.add('disabled')
+            }
+            return board[x]
+        }
     }
     if (board.filter(i => i === null).length === 0) return -1
     return null
@@ -64,6 +71,7 @@ fields.forEach((field, index) => {
         if (board[index] !== null) return
         board[index] = turn
         field.innerHTML = turn === 0 ? 'X' : 'O'
+        field.classList.add('disabled')
         const winner = getGameWinner(board)
         if (winner !== null) {
             showGameResult(winner)
