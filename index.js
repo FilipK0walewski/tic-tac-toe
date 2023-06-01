@@ -13,7 +13,7 @@ app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 
 app.get('/', (req, res) => {
-  res.render('index.html', { title: 'Express with EJS' });
+  res.render('index.html');
 })
 
 app.get('/online', (req, res) => {
@@ -21,16 +21,16 @@ app.get('/online', (req, res) => {
     const uuid = uuidv4();
     res.redirect(`online?gameId=${uuid}`)
   }
-  res.render('online.html', { title: 'Express with EJS' });
+  res.render('online.html');
 })
 
 app.get('/local', (req, res) => {
-  res.render('local.html', { title: 'Express with EJS' });
+  res.render('local.html');
 })
 
 
 app.get('/ai', (req, res) => {
-  res.render('ai.html', { title: 'Express with EJS' });
+  res.render('ai.html');
 })
 
 const games = {}
