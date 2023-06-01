@@ -50,6 +50,7 @@ class Game {
     this.playersMap = {}
     this.pause = true
     this.winningCombination = null
+    this.winner = null
   }
 }
 

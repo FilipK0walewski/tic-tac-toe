@@ -6,6 +6,10 @@ const infoForm = document.getElementById('info-form')
 const player0 = document.getElementById('player-0')
 const player1 = document.getElementById('player-1')
 
+document.getElementById('invite-url').addEventListener('click', () => {
+  navigator.clipboard.writeText(window.location.href)
+})
+
 let gameId = urlParams.get('gameId')
 const socket = io(`/?gameId=${gameId}`);
 
